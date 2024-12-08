@@ -4,12 +4,29 @@ import argparse
 
 
 """
-Loads, converts to gray scale and binarizes the image.
+Check if two rectangles are close within threshold
 Args:
-    image_path (str): Path to the image
+    rect1 (arr): Rectangle position
+    rect2 (arr): Rectangle position
+    threshold (int): Maximum distance between rectangles for merge
 Returns:
-    image: cv2.imread array
-    binary: cv2.threshold array
+    rectangles_are_close: bool
+"""
+def rectangles_are_close(rect1, rect2, threshold=10):
+    x1, y1, x2, y2 = rect1
+    x3, y3, x4, y4 = rect2
+    rectangles_are_close = (x1 - threshold < x4 and x3 - threshold < x2) and (y1 - threshold < y4 and y3 - threshold < y2)
+
+    return rectangles_are_close
+
+
+"""
+Load and preprocess the image: convert to grayscale and apply binary threshold
+Args:
+    image_path (str): Path to the input image
+Returns:
+    image: array
+    binary: array
 Raises:
     FileNotFoundError: If the image was not found
 """
@@ -20,43 +37,76 @@ def preprocess_image(image_path):
     
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, binary = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY_INV)
+
     return image, binary
 
-"""
-Finds the contours and draws rectangles around detected characters
-Args:
-    image (array): cv2.imread array
-    binary_image (array): cv2.threshold array
-Returns:
-    contours: cv2.findContours
-"""
-def find_and_draw_contours(image, binary_image):
-    contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for cnt in contours:
-        x, y, w, h = cv2.boundingRect(cnt)
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    return contours
 
 """
-Extracts features for every contour and scaling them to font_size
+Find and merge nearby contours based on the merge_threshold
 Args:
-    contours (array): cv2.findContours array
-    binary_image (array): cv2.threshold array
-    font_size (int): Scales image to specified size
+    binary (arr): Array of the binary image
+    merge_threshold (int): Threshold for merging close countours
+Returns:
+    merged_rectangles: array
+"""
+def find_and_merge_contours(binary, merge_threshold=10):
+    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours_sorted = sorted(contours, key=lambda cnt: cv2.boundingRect(cnt)[0])
+    rectangles = [cv2.boundingRect(cnt) for cnt in contours_sorted]
+
+    merged_rectangles = []
+    while rectangles:
+        rect1 = rectangles.pop(0)
+        merged = False
+        for i, rect2 in enumerate(merged_rectangles):
+            if rectangles_are_close(
+                (rect1[0], rect1[1], rect1[0] + rect1[2], rect1[1] + rect1[3]),
+                (rect2[0], rect2[1], rect2[2], rect2[3]),
+                merge_threshold
+            ):
+                x1 = min(rect1[0], rect2[0])
+                y1 = min(rect1[1], rect2[1])
+                x2 = max(rect1[0] + rect1[2], rect2[2])
+                y2 = max(rect1[1] + rect1[3], rect2[3])
+                merged_rectangles[i] = (x1, y1, x2, y2)
+                merged = True
+                break
+        if not merged:
+            merged_rectangles.append(
+                (rect1[0], rect1[1], rect1[0] + rect1[2], rect1[1] + rect1[3])
+            )
+
+    return merged_rectangles
+
+
+"""
+Extract feature for every contour and scale them to font_size
+Args:
+    image_path (str): Path to the image
+    font_size (int): Scale image to specified size
 Returns:
     features: array
 """
-def extract_features(contours, binary_image, font_size=50):
+def extract_features(image_path, font_size=50, merge_threshold=10):
+    # Preprocess the image
+    image, binary = preprocess_image(image_path)
+
+    # Find and merge contours
+    merged_rectangles = find_and_merge_contours(binary, merge_threshold)
+
+    # Extract features
     features = []
-    for cnt in contours:
-        x, y, w, h = cv2.boundingRect(cnt)
-        char = binary_image[y:y+h, x:x+w]
-        char_resized = cv2.resize(char, (font_size, font_size))
+    for x1, y1, x2, y2 in merged_rectangles:
+        char = binary[y1:y2, x1:x2]
+        char_resized = cv2.resize(char, (font_size, font_size), interpolation=cv2.INTER_NEAREST)
         features.append(char_resized.flatten())
-    return features
+        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+    return features, image
+
 
 """
-Recognizes text by comparing pattern features
+Recognize text by comparing pattern features
 Args:
     features (array): Features array
     patterns (array): Patterns array
@@ -65,6 +115,7 @@ Returns:
 """
 def recognize_text(features, patterns):
     recognized_text = ""
+
     for feature in features:
         best_match = None
         best_score = float('inf')
@@ -74,34 +125,5 @@ def recognize_text(features, patterns):
                 best_match = char
                 best_score = score
         recognized_text += best_match
+
     return recognized_text
-
-def main():
-    parser = argparse.ArgumentParser(description="OCR - optical character recognition.")
-    parser.add_argument("--image_path", help="Ścieżka do pliku obrazu.")
-    parser.add_argument("--output_path", help="Ścieżka do pliku wynikowego obrazu.", default="output.png")
-    args = parser.parse_args()
-
-    image, binary = preprocess_image(args.image_path)
-
-    contours = find_and_draw_contours(image, binary)
-
-    features = extract_features(contours, binary)
-
-    # Wzorce - przykładowo uzupełnione danymi
-    # patterns = {
-    #     "0": np.zeros(100),  # Przykladowe wektory cech
-    #     "1": np.ones(100),
-    #     # Dodaj resztę wzorców
-    # }
-
-    # # Rozpoznawanie tekstu
-    # recognized_text = recognize_text(features, patterns)
-    # print("Rozpoznany tekst:", recognized_text)
-
-    # Zapis obrazu z zaznaczonymi konturami
-    cv2.imwrite(args.output_path, image)
-    print(f"Obraz z zaznaczonymi konturami zapisany do: {args.output_path}")
-
-if __name__ == "__main__":
-    main()

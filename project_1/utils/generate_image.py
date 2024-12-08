@@ -4,8 +4,11 @@ from PIL import Image, ImageDraw, ImageFont
 import argparse
 
 
+TEMPLATE_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
 """
-Generates image with specified characters
+Generate template image with specified characters for OCR
 Args:
     font_path (str): Path to the font
     font_size (str): Size of the font
@@ -16,8 +19,12 @@ Returns:
 Raises:
     OSError: If there was an error when loading font
 """
-def generate_characters_image(font_path, font_size, output_path, characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"):
-    character_spacing = font_size // 2
+def generate_template_image(font_path, font_size, output_path, characters=TEMPLATE_CHARACTERS):
+    if characters != TEMPLATE_CHARACTERS:
+        character_spacing = 1
+    else:
+        character_spacing = font_size // 2
+
     image_width = (len(characters) * font_size) + ((len(characters) - 1) * character_spacing)
     image_height = font_size * 2  # Bonus margin
 
@@ -41,17 +48,14 @@ def generate_characters_image(font_path, font_size, output_path, characters="abc
     cv2.imwrite(output_path, binary_image)
     print(f"Saved output file to {output_path}")
 
-    return binary_image
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate character template with specified font.")
     parser.add_argument("--font_path", help="Font path.", default="/mnt/c/Windows/Fonts/arialbd.ttf")
     parser.add_argument("--font_size", help="Font size (default 50).", type=int, default=50)
-    parser.add_argument("--characters", help="Characters used for pattern generation", default="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    parser.add_argument("--characters", help="Characters used for pattern generation", default=TEMPLATE_CHARACTERS)
     parser.add_argument("--output_path", help="Output image path.", default="characters.png")
 
     args = parser.parse_args()
 
-    generate_characters_image(font_path=args.font_path, font_size=args.font_size, characters=args.characters, output_path=args.output_path)
-
+    generate_template_image(font_path=args.font_path, font_size=args.font_size, characters=args.characters, output_path=args.output_path)
