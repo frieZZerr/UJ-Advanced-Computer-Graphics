@@ -123,7 +123,7 @@ def extract_features(image_path, font_size=50):
         char_resized_with_padding[padding_size:padding_size + font_size, padding_size:padding_size + font_size] = char_resized
 
         features.append(char_resized_with_padding)
-        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
     return features, image
 
