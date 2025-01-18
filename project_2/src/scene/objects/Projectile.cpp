@@ -1,10 +1,11 @@
-#include "Projectile.h"
+#include "scene/objects/Projectile.h"
 
 #include <osg/ShapeDrawable>
 #include <osg/Geode>
 
 osg::ref_ptr<osg::PositionAttitudeTransform> createProjectile() {
     osg::ref_ptr<osg::Sphere> sphere = new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.5);
+
     osg::ref_ptr<osg::ShapeDrawable> drawable = new osg::ShapeDrawable(sphere);
 
     osg::ref_ptr<osg::Geode> geode = new osg::Geode();
@@ -20,8 +21,8 @@ osg::ref_ptr<osg::AnimationPath> createProjectilePath(const osg::Vec3& start, co
     osg::ref_ptr<osg::AnimationPath> animationPath = new osg::AnimationPath();
     animationPath->setLoopMode(osg::AnimationPath::NO_LOOPING);
 
-    const float gravity = -9.8f;  // Przyspieszenie ziemskie
-    const int numSteps = 100;    // Liczba punktów na ścieżce
+    const float gravity = -9.8f;
+    const int numSteps = 100;
 
     for (int i = 0; i <= numSteps; ++i) {
         float t = duration * static_cast<float>(i) / numSteps;
@@ -30,7 +31,7 @@ osg::ref_ptr<osg::AnimationPath> createProjectilePath(const osg::Vec3& start, co
         float z = start.z() + velocity.z() * t + 0.5f * gravity * t * t;
 
         osg::Vec3 position(x, y, z);
-        osg::Quat rotation;  // Brak rotacji w tej animacji
+        osg::Quat rotation;
         animationPath->insert(t, osg::AnimationPath::ControlPoint(position, rotation));
     }
 

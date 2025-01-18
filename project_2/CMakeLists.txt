@@ -6,15 +6,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenSceneGraph REQUIRED COMPONENTS osgDB osgGA osgViewer osgUtil osg)
 
-set(SOURCES
-    src/Main.cpp
-    src/input/InputHandler.cpp
-    src/scene/Scene.cpp
-    src/scene/objects/Projectile.cpp
-    src/scene/objects/Grass.cpp
-    src/scene/objects/Cannon.cpp
-    src/scene/objects/Target.cpp
-)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
 add_executable(game ${SOURCES})
+
 target_link_libraries(game osgDB osgGA osgViewer osgUtil osg)
+target_include_directories(game PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+message(STATUS "Found source files: ${SOURCES}")
