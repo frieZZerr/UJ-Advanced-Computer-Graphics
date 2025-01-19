@@ -1,5 +1,6 @@
 #include "input/InputHandler.h"
 #include "scene/objects/Projectile.h"
+#include "scene/collisions/ProjectileCollisionCallback.h"
 
 #include <osg/Quat>
 #include <osg/Vec3>
@@ -82,9 +83,15 @@ void InputHandler::fireCannon(float holdDuration) {
 
     osg::Vec3 velocity = worldDirection * finalDistance;
 
-    osg::ref_ptr<osg::AnimationPath> path = createProjectilePath(cannonPosition, velocity, 2.0f);
+    osg::ref_ptr<osg::AnimationPath> path = createProjectilePath(cannonPosition, velocity, 15.0f);
 
     projectile->setUpdateCallback(new osg::AnimationPathCallback(path));
+
+    osg::ref_ptr<ProjectileCollisionCallback> collisionCb =
+        new ProjectileCollisionCallback(_sceneRoot, _target);
+
+    collisionCb->addNestedCallback(projectile->getUpdateCallback());
+    projectile->setUpdateCallback(collisionCb);
 
     _sceneRoot->addChild(projectile);
 }

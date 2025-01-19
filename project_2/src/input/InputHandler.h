@@ -7,15 +7,17 @@
 
 class InputHandler : public osgGA::GUIEventHandler {
 public:
-    InputHandler(osg::Group* sceneRoot, osg::PositionAttitudeTransform* cannon)
+    InputHandler(osg::Group* sceneRoot, osg::PositionAttitudeTransform* cannon, osg::PositionAttitudeTransform* target)
         : _sceneRoot(sceneRoot),
-          _cannon(cannon) {};
+          _cannon(cannon),
+          _target(target) {};
 
     virtual bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa);
 
 private:
     osg::Group* _sceneRoot;
     osg::ref_ptr<osg::PositionAttitudeTransform> _cannon;
+    osg::ref_ptr<osg::PositionAttitudeTransform> _target;
 
     const osg::Vec3 yAxisVector = osg::Vec3(0.0f, 1.0f, 0.0f);
     const osg::Vec3 zAxisVector = osg::Vec3(0.0f, 0.0f, 1.0f);

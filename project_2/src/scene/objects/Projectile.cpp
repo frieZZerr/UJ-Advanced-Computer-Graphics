@@ -4,7 +4,7 @@
 #include <osg/Geode>
 
 osg::ref_ptr<osg::PositionAttitudeTransform> createProjectile() {
-    osg::ref_ptr<osg::Sphere> sphere = new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.5);
+    osg::ref_ptr<osg::Sphere> sphere = new osg::Sphere(osg::Vec3(0.0f, 0.0f, 0.0f), PROJECTILE_DIAMETER);
 
     osg::ref_ptr<osg::ShapeDrawable> drawable = new osg::ShapeDrawable(sphere);
 
