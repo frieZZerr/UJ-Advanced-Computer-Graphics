@@ -4,7 +4,7 @@
 #include <osg/PositionAttitudeTransform>
 #include <osg/ref_ptr>
 
-static const float TARGET_DIAMETER = 1.0f;
+static const float TARGET_RADIUS = 0.5f;
 
 osg::ref_ptr<osg::PositionAttitudeTransform> createTarget();
 

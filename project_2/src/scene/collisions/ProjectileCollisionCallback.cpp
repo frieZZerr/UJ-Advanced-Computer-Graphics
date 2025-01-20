@@ -13,10 +13,10 @@ void ProjectileCollisionCallback::operator()(osg::Node* node, osg::NodeVisitor* 
 
     osg::Vec3 projectilePos = projectilePAT->getPosition();
 
-    if (projectilePos.z() <= -PROJECTILE_DIAMETER) {
+    if (projectilePos.z() <= -PROJECTILE_RADIUS) {
         // std::cout << "Projectile hit the ground!" << std::endl;
 
-        projectilePos.z() = -PROJECTILE_DIAMETER/2.0f;
+        projectilePos.z() = -PROJECTILE_RADIUS;
         projectilePAT->setPosition(projectilePos);
         projectilePAT->setUpdateCallback(nullptr);
 
@@ -30,8 +30,8 @@ void ProjectileCollisionCallback::operator()(osg::Node* node, osg::NodeVisitor* 
     osg::Vec3 diff = projectilePos - targetPos;
     float distance = diff.length();
 
-    float sumDiameter = PROJECTILE_DIAMETER + TARGET_DIAMETER;
-    if (distance <= sumDiameter) {
+    float sumRadius = PROJECTILE_RADIUS + TARGET_RADIUS;
+    if (distance <= sumRadius*2.0f) {
         // std::cout << "Projectile hit the target! Removing target." << std::endl;
         _targetTransform->setNodeMask(0x0);
 
