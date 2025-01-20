@@ -33,14 +33,7 @@ void ProjectileCollisionCallback::operator()(osg::Node* node, osg::NodeVisitor* 
     float sumDiameter = PROJECTILE_DIAMETER + TARGET_DIAMETER;
     if (distance <= sumDiameter) {
         // std::cout << "Projectile hit the target! Removing target." << std::endl;
-
-        // Option A: remove target & projectile from the scene
-        if (_sceneRoot.valid()) {
-            _sceneRoot->removeChild(_targetTransform.get());
-        }
-
-        // Option B: hide target instead, or mark as destroyed
-        // _targetTransform->setNodeMask(0x0);
+        _targetTransform->setNodeMask(0x0);
 
         return;
     }

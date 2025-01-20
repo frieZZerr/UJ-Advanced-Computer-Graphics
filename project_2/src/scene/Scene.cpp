@@ -1,17 +1,17 @@
 #include "scene/Scene.h"
-#include "scene/objects/Grass.h"
 #include "scene/objects/Cannon.h"
-#include "scene/objects/Target.h"
-#include "scene/objects/Projectile.h"
 
-osg::ref_ptr<osg::Group> createScene() {
-    osg::ref_ptr<osg::Group> root = new osg::Group();
+Scene::Scene() {
+    _root = new osg::Group();
+    buildScene();
+}
 
-    root->addChild(createGrass());
+void Scene::buildScene() {
+    _root->addChild(createGrass());
 
-    root->addChild(createCannon());
+    _cannon = new Cannon();
+    _root->addChild(_cannon->getTransform());
 
-    root->addChild(createTarget());
-
-    return root;
+    _target = createTarget();
+    _root->addChild(_target);
 }
