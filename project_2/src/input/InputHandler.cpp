@@ -45,7 +45,7 @@ bool InputHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdap
             _cannon->setFireKeyHeld(false);
             double holdDuration = ea.getTime() - _cannon->getFirePressStartTime();
 
-            _cannon->fire(static_cast<float>(holdDuration), _sceneRoot, _target);
+            _cannon->fire(static_cast<float>(holdDuration), _sceneRoot, _targets);
 
             return true;
         }

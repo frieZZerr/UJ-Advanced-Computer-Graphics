@@ -1,4 +1,5 @@
 #include "scene/objects/Cannon.h"
+#include "scene/objects/Target.h"
 #include "scene/objects/Projectile.h"
 #include "scene/collisions/ProjectileCollisionCallback.h"
 
@@ -7,14 +8,15 @@
 #include <osg/Quat>
 #include <osg/ShapeDrawable>
 #include <iostream>
+#include <vector>
 
 Cannon::Cannon(const osg::Vec3& position) {
     createCannon(position);
 }
 
 void Cannon::createCannon(const osg::Vec3& position) {
-    _cannonTransform = new osg::PositionAttitudeTransform();
-    _cannonBody = new osg::Geode();
+    this->_cannonTransform = new osg::PositionAttitudeTransform();
+    this->_cannonBody = new osg::Geode();
 
     osg::ref_ptr<osg::ShapeDrawable> cannonShape = new osg::ShapeDrawable(
         new osg::Box(osg::Vec3(0.0f, 0.0f, 0.5f), 1.0f, 1.0f, 2.0f)
@@ -28,32 +30,32 @@ void Cannon::createCannon(const osg::Vec3& position) {
 }
 
 void Cannon::setFireKeyHeld(bool keyHeld) {
-    this->fireKeyHeld = keyHeld;
+    this->_fireKeyHeld = keyHeld;
 }
 
 void Cannon::setFirePressStartTime(double pressStartTime) {
-    this->firePressStartTime = pressStartTime;
+    this->_firePressStartTime = pressStartTime;
 }
 
 void Cannon::setPosition(const osg::Vec3& position) {
-    _cannonTransform->setPosition(position);
+    this->_cannonTransform->setPosition(position);
 }
 
 void Cannon::rotate(float angle, RotationAxis axis) {
     switch (axis) {
     case RotationAxis::YAW:
-        yawAngle += angle;
+        _yawAngle += angle;
 
-        if (yawAngle < minYawAngle) yawAngle = minYawAngle;
-        if (yawAngle > maxYawAngle) yawAngle = maxYawAngle;
+        if (_yawAngle < _minYawAngle) _yawAngle = _minYawAngle;
+        if (_yawAngle > _maxYawAngle) _yawAngle = _maxYawAngle;
 
         break;
 
     case RotationAxis::PITCH:
-        pitchAngle += angle;
+        _pitchAngle += angle;
 
-        if (pitchAngle < minPitchAngle) pitchAngle = minPitchAngle;
-        if (pitchAngle > maxPitchAngle) pitchAngle = maxPitchAngle;
+        if (_pitchAngle < _minPitchAngle) _pitchAngle = _minPitchAngle;
+        if (_pitchAngle > _maxPitchAngle) _pitchAngle = _maxPitchAngle;
 
         break;
 
@@ -62,51 +64,51 @@ void Cannon::rotate(float angle, RotationAxis axis) {
     }
 
     osg::Quat yawQuat(
-        osg::DegreesToRadians(yawAngle),
-        yAxisVector
+        osg::DegreesToRadians(_yawAngle),
+        _yAxisVector
     );
 
     osg::Quat pitchQuat(
-        osg::DegreesToRadians(pitchAngle),
-        zAxisVector
+        osg::DegreesToRadians(_pitchAngle),
+        _zAxisVector
     );
 
     osg::Quat finalQuat = yawQuat * pitchQuat;
 
-    getTransform()->setAttitude(finalQuat);
+    this->getTransform()->setAttitude(finalQuat);
 }
 
-void Cannon::fire(float holdDuration, osg::Group* sceneRoot, osg::PositionAttitudeTransform* target) {
+void Cannon::fire(float holdDuration, osg::Group* sceneRoot, std::vector<osg::ref_ptr<Target>>& targets) {
     if (holdDuration < 0.0f) {
         holdDuration = 0.0f;
-    } else if (holdDuration > maxHoldTime) {
-        holdDuration = maxHoldTime;
+    } else if (holdDuration > _maxHoldTime) {
+        holdDuration = _maxHoldTime;
     }
 
-    float distanceFactor = holdDuration * distancePerHold;
+    float distanceFactor = holdDuration * _distancePerHold;
     
     // std::cout << "Firing cannon! Held for " << holdDuration 
     //           << " seconds. DistanceFactor=" << distanceFactor << std::endl;
 
-    osg::Vec3 cannonPosition = getTransform()->getPosition();
-    osg::Quat cannonRotation = getTransform()->getAttitude();
+    osg::Vec3 cannonPosition = this->getTransform()->getPosition();
+    osg::Quat cannonRotation = this->getTransform()->getAttitude();
 
-    osg::ref_ptr<osg::PositionAttitudeTransform> projectile = createProjectile();
-
-    osg::Vec3 localDirection(zAxisVector);  
+    osg::Vec3 localDirection(_zAxisVector);  
     osg::Vec3 worldDirection = cannonRotation * localDirection;
 
-    float finalDistance = distancePerHold + distanceFactor;
+    float finalDistance = _distancePerHold + distanceFactor;
     osg::Vec3 velocity = worldDirection * finalDistance;
-    osg::ref_ptr<osg::AnimationPath> path = createProjectilePath(cannonPosition, velocity, 15.0f);
 
-    projectile->setUpdateCallback(new osg::AnimationPathCallback(path));
+    osg::ref_ptr<Projectile> projectile = new Projectile(cannonPosition, velocity, 15.0f);
+    osg::ref_ptr<osg::PositionAttitudeTransform> projectileTransform = projectile->getTransform();
+
+    projectileTransform->setUpdateCallback(new osg::AnimationPathCallback(projectile->getAnimationPath()));
 
     osg::ref_ptr<ProjectileCollisionCallback> collisionCb =
-        new ProjectileCollisionCallback(sceneRoot, target);
+        new ProjectileCollisionCallback(sceneRoot, targets, projectile);
 
-    collisionCb->addNestedCallback(projectile->getUpdateCallback());
-    projectile->setUpdateCallback(collisionCb);
+    collisionCb->addNestedCallback(projectileTransform->getUpdateCallback());
+    projectileTransform->setUpdateCallback(collisionCb);
 
-    sceneRoot->addChild(projectile);
+    sceneRoot->addChild(projectileTransform);
 }
