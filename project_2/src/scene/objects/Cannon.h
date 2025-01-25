@@ -24,6 +24,7 @@ public:
     osg::ref_ptr<osg::PositionAttitudeTransform> getTransform() const { return this->_cannonTransform; }
     bool getFireKeyHeld() const { return this->_fireKeyHeld; };
     double getFirePressStartTime() const { return this->_firePressStartTime; };
+    float getMaxHoldDuration() const { return this->_maxHoldTime; }
 
     void setFireKeyHeld(bool keyHeld);
     void setFirePressStartTime(double pressStartTime);
@@ -32,9 +33,14 @@ public:
     void rotate(float angle, RotationAxis axis);
     void fire(float holdDuration, osg::Group* sceneRoot, std::vector<osg::ref_ptr<Target>>& targets);
 
+    void createHelperPath(float duration);
+    void showHelperPath();
+    void hideHelperPath();
+
 private:
     osg::ref_ptr<osg::PositionAttitudeTransform> _cannonTransform;
     osg::ref_ptr<osg::Geode> _cannonBody;
+    osg::ref_ptr<osg::Group> _helperPathGroup;
 
     const osg::Vec3 _yAxisVector = osg::Vec3(0.0f, 1.0f, 0.0f);
     const osg::Vec3 _zAxisVector = osg::Vec3(0.0f, 0.0f, 1.0f);
@@ -52,9 +58,12 @@ private:
 
     double _firePressStartTime = 0.0;
 
-    bool _fireKeyHeld = false;
+    bool _fireKeyHeld       = false;
+    bool _helperPathVisible = false;
 
     void createCannon(const osg::Vec3& position);
+
+    float computeTimeToGround(const osg::Vec3& start, const osg::Vec3& velocity, float gravity);
 };
 
 #endif // CANNON_H

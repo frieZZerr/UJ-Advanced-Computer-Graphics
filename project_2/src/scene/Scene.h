@@ -6,6 +6,7 @@
 #include "scene/objects/Target.h"
 #include "scene/objects/Projectile.h"
 #include "scene/objects/Grass.h"
+// #include "ui/UI.h"
 
 #include <osg/Group>
 #include <osg/Referenced>
@@ -26,10 +27,16 @@ private:
     osg::ref_ptr<Grass> _grass;
     osg::ref_ptr<Cannon> _cannon;
     std::vector<osg::ref_ptr<Target>> _targets;
+    // osg::ref_ptr<UI> _ui;
 
     int _numTargets = 5;
 
+    float _minTargetDistance = 5.0f;
+
     void buildScene();
+    void addGrass();
+    void addCannon();
+    void addTargets();
 };
 
 #endif // SCENE_H

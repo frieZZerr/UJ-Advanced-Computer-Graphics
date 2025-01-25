@@ -4,6 +4,8 @@
 #include <iostream>
 
 bool InputHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa) {
+    float holdDuration;
+
     switch (ea.getEventType()) {
     case osgGA::GUIEventAdapter::KEYDOWN:
         switch(ea.getKey()) {
@@ -12,7 +14,13 @@ bool InputHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdap
             if (!_cannon->getFireKeyHeld()) {
                 _cannon->setFireKeyHeld(true);
                 _cannon->setFirePressStartTime(ea.getTime());
+                _cannon->showHelperPath();
             }
+
+            holdDuration = ea.getTime() - _cannon->getFirePressStartTime();
+            holdDuration = clampHoldDuration(holdDuration, _cannon->getMaxHoldDuration());
+            _cannon->createHelperPath(holdDuration);
+
             return true;
 
         case osgGA::GUIEventAdapter::KEY_W:
@@ -43,9 +51,11 @@ bool InputHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdap
         if (ea.getKey() == osgGA::GUIEventAdapter::KEY_Space && _cannon->getFireKeyHeld()) {
             // std::cout << "Key Space released: Firing cannon." << std::endl;
             _cannon->setFireKeyHeld(false);
-            double holdDuration = ea.getTime() - _cannon->getFirePressStartTime();
+            _cannon->hideHelperPath();
+            holdDuration = ea.getTime() - _cannon->getFirePressStartTime();
+            holdDuration = clampHoldDuration(holdDuration, _cannon->getMaxHoldDuration());
 
-            _cannon->fire(static_cast<float>(holdDuration), _sceneRoot, _targets);
+            _cannon->fire(holdDuration, _sceneRoot, _targets);
 
             return true;
         }
@@ -55,4 +65,10 @@ bool InputHandler::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdap
     }
 
     return false;
+}
+
+float InputHandler::clampHoldDuration(float duration, float maxHoldTime) {
+    if (duration < 0.0f)        { return 0.0f; }
+    if (duration > maxHoldTime) { return maxHoldTime; }
+    return duration;
 }

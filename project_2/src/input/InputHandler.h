@@ -22,6 +22,8 @@ private:
     osg::Group* _sceneRoot;
     osg::ref_ptr<Cannon> _cannon;
     std::vector<osg::ref_ptr<Target>> _targets;
+
+    float clampHoldDuration(float holdDuration, float maxHoldTime);
 };
 
 #endif // INPUT_HANDLER_H
