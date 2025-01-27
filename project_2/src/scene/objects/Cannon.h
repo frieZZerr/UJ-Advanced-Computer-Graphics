@@ -62,8 +62,6 @@ private:
     bool _helperPathVisible = false;
 
     void createCannon(const osg::Vec3& position);
-
-    float computeTimeToGround(const osg::Vec3& start, const osg::Vec3& velocity, float gravity);
 };
 
 #endif // CANNON_H

@@ -10,7 +10,7 @@
 
 class Projectile : public osg::Referenced {
 public:
-    Projectile(const osg::Vec3& startPosition, const osg::Vec3& velocity, float duration);
+    Projectile(const osg::Vec3& startPosition, const osg::Vec3& velocity);
 
     static float getProjectileGravity() { return _projectileGravity; }
 
@@ -31,7 +31,7 @@ private:
     const float _projectileRadius  = 0.25f;
 
     void createProjectile();
-    void createProjectilePath(const osg::Vec3& start, const osg::Vec3& velocity, float duration);
+    void createProjectilePath(const osg::Vec3& start, const osg::Vec3& velocity);
 };
 
 #endif // PROJECTILE_H

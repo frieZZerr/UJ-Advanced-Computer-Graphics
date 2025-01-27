@@ -1,11 +1,14 @@
 #include "scene/objects/Projectile.h"
+#include "libs/BalisticCurve.h"
 
 #include <osg/ShapeDrawable>
 #include <osg/Geode>
 
-Projectile::Projectile(const osg::Vec3& startPosition, const osg::Vec3& velocity, float duration) {
+#include "iostream"
+
+Projectile::Projectile(const osg::Vec3& startPosition, const osg::Vec3& velocity) {
     createProjectile();
-    createProjectilePath(startPosition, velocity, duration);
+    createProjectilePath(startPosition, velocity);
 }
 
 void Projectile::createProjectile() {
@@ -20,21 +23,17 @@ void Projectile::createProjectile() {
     _projectileTransform->addChild(_projectileBody);
 }
 
-void Projectile::createProjectilePath(const osg::Vec3& start, const osg::Vec3& velocity, float duration) {
+void Projectile::createProjectilePath(const osg::Vec3& start, const osg::Vec3& velocity) {
     this->_animationPath = new osg::AnimationPath();
     _animationPath->setLoopMode(osg::AnimationPath::NO_LOOPING);
 
+    float timeToGroundHit = computeTimeToGround(start, velocity, _projectileGravity);
+
     const int numSteps = 100;
+    auto timePositionPairs = computeCurvePositionsWithTime(numSteps, start, velocity, _projectileGravity);
 
-    for (int i = 0; i <= numSteps; ++i) {
-        float t = duration * static_cast<float>(i) / numSteps;
-        float x = start.x() + velocity.x() * t;
-        float y = start.y() + velocity.y() * t;
-        float z = start.z() + velocity.z() * t + 0.5f * _projectileGravity * t * t;
-
-        osg::Vec3 position(x, y, z);
-        osg::Quat rotation;
-        _animationPath->insert(t, osg::AnimationPath::ControlPoint(position, rotation));
+    for (const auto& [t, pos] : timePositionPairs) {
+        _animationPath->insert(t, osg::AnimationPath::ControlPoint(pos));
     }
 
     _projectileTransform->setUpdateCallback(new osg::AnimationPathCallback(_animationPath));
